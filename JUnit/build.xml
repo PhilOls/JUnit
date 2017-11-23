@@ -9,27 +9,14 @@
 		</classpath>
 	</taskdef>
 	
+	<import file="triage.xml"/>
+
 	<property environment="env"/>
 	<property file="build.properties"/>	
 	
-	<target name="default" description="Description missing">
+	<target name="default">
 		<sequential>
-			<if>
-				<isset property="vip.list"/>
-				<then>
-				</then>
-				<else>
-					<input
-					message="Please enter vip name(s) using comma-separated list:"
-					addproperty="vip.list"
-					/>
-				</else>
-			</if>
-			<for list="${vip.list}" param="vip">
-				<sequential>
-					<echo message="Will create @{vip} vip in ${vip.dir}."/>
-				</sequential>
-			</for>
+			<triage/>
 		</sequential>
 	</target>
 </project>

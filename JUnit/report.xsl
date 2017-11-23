@@ -73,13 +73,13 @@ SVN revision :<xsl:value-of select="testsuites/@svn"/>
 <br/>
 Coverage     :<xsl:value-of select="testsuites/@cover"/>
 <xsl:for-each select="testsuites">
-<br/>Full sortable report :<a href="{concat('http://jenkins.decawave.local/job/',@job,'/ws/testbench/all/report_',@build,'/report.html')}">Here</a>&nbsp;
+<br/>Full sortable report :<a href="{concat(@urlroot,'/job/',@job,'/ws/testbench/all/report_',@build,'/report.html')}">Here</a>&nbsp;
 <xsl:choose>
 <xsl:when test="@cover='on'">
-<br/>Coverage report      :<a href="{concat('http://jenkins.decawave.local/job/',@job,'/ws/testbench/all/cov/rpt/')}">Here</a>&nbsp;
+<br/>Coverage report      :<a href="{concat(@urlroot,'/job/',@job,'/ws/testbench/all/cov/rpt/')}">Here</a>&nbsp;
 </xsl:when>
 </xsl:choose>
-<br/>Trend chart          :<a href="{concat('http://jenkins.decawave.local/job/',@job,'/test/trend')}">Here</a>&nbsp;
+<br/>Trend chart          :<a href="{concat(@urlroot,'/job/',@job,'/test/trend')}">Here</a>&nbsp;
 <br/>
 </xsl:for-each>
 <table id="summary" style="border-width:1px; border-style:solid; border-color:black">&nbsp;
