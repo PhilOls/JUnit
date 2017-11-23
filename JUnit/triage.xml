@@ -28,8 +28,8 @@
 			<echo message="Test report xml generation complete. Starting xsltproc for html now..."/>
 			<exec executable="/usr/bin/xsltproc" failonerror="true">
 				<arg value="./report.xsl"/>
-				<arg value="${report.dir}/report.xml"/>
-				<redirector output="${report.dir}/report.html"/>
+				<arg value="${report.dir}/report/report.xml"/>
+				<redirector output="${report.dir}/report/report.html"/>
 			</exec>
 			<echo message="Test report html generation complete. "/>
 			<copy todir="${report.dir}/js"><fileset dir="./js"/></copy>
@@ -43,13 +43,13 @@
 					<if>
 						<isset property="env.BUILD_NUMBER"/>
 						<then>
-							<copy todir="report_${env.BUILD_NUMBER}">
+							<copy todir="${report.dir}/report_${env.BUILD_NUMBER}">
 								<fileset dir="report"/>
 							</copy>
 						</then>
 						<else>
-							<copy todir="report_${datetimeref}">
-								<fileset dir="report"/>
+							<copy todir="${report.dir}/report_${datetimeref}">
+								<fileset dir="${report.dir}/report"/>
 							</copy>
 						</else>
 					</if>
