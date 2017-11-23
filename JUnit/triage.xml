@@ -1,0 +1,57 @@
+<project name="triage">
+  <description>
+    Ant triage targets to generate test reports and report build status
+  </description>
+  <property environment="env"/>
+  
+  <macrodef name="triage">
+    <sequential>
+      <tstamp>
+        <format property="datetimeref" pattern="yyyyMMdd_HHmmss"/>
+        <format property="dateref" pattern="yyyyMMdd"/>
+      </tstamp>    
+      <echo message="Starting python for csv to xml now..."/>
+      <exec executable="hostname" outputproperty="hostname"/>
+      <exec executable="/usr/bin/python" failonerror="true">
+        <arg value="${root.dir}/shared/utils/rpt_csv2xml.py"/>
+        <arg value="${size}"/>
+        <arg value="${hostname}"/>
+        <arg value="${env.BUILD_NUMBER}"/>
+        <arg value="${cover}"/>
+        <arg value="${env.SVN_REVISION}"/>
+      </exec>
+      <echo message="Test report xml generation complete. Starting xsltproc for html now..."/>
+      <exec executable="/usr/bin/xsltproc" failonerror="true">
+        <arg value="${root.dir}/shared/utils/report.xsl"/>
+        <arg value="report/report.xml"/>
+        <redirector output="report/report.html"/>
+      </exec>
+      <echo message="Test report html generation complete. "/>
+      <copy todir="report/js"><fileset dir="${root.dir}/shared/utils/js"/></copy>
+      <copy todir="report/css"><fileset dir="${root.dir}/shared/utils/css"/></copy>
+      <if>
+        <equals arg1="${archive}" arg2="off"/>
+      <then>
+        <echo message="Archive off"/>
+      </then>
+      <else>
+	      <if>
+	        <isset property="env.BUILD_NUMBER"/>
+	        <then>
+			      <copy todir="report_${env.BUILD_NUMBER}">
+			        <fileset dir="report"/>
+			      </copy>
+	        </then>
+	        <else>
+	          <copy todir="report_${datetimeref}">
+	            <fileset dir="report"/>
+	          </copy>
+	        </else>
+	      </if>
+      </else>
+      </if>
+      </sequential>
+  </macrodef>
+  
+</project>
+  

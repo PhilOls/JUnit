@@ -1,0 +1,35 @@
+<project name="JUnit" default="default" basedir=".">
+	<description>
+		JUnit test report creation
+	</description>
+	
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="./ant-contrib-0.6.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<property environment="env"/>
+	<property file="build.properties"/>	
+	
+	<target name="default" description="Description missing">
+		<sequential>
+			<if>
+				<isset property="vip.list"/>
+				<then>
+				</then>
+				<else>
+					<input
+					message="Please enter vip name(s) using comma-separated list:"
+					addproperty="vip.list"
+					/>
+				</else>
+			</if>
+			<for list="${vip.list}" param="vip">
+				<sequential>
+					<echo message="Will create @{vip} vip in ${vip.dir}."/>
+				</sequential>
+			</for>
+		</sequential>
+	</target>
+</project>
