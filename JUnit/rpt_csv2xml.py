@@ -54,12 +54,15 @@ for corner in args.corners:
 
 class Record:
 
-  def __init__(self, duration, starttime, logpath, reason):
+  def __init__(self, duration, starttime, logpath, reason, regress = None):
     self.duration = "0"
     self.starttime = "0"
     self.logpath = ""
     self.reason = ""
-
+    if regress is None:
+      self.regress = "tbd"
+    else:
+      self.regress = regress
 
 def parseFile(status, d):
   fn = args.dir + "/report/" + status + ".csv"
@@ -69,13 +72,29 @@ def parseFile(status, d):
       for line in csvreader:
         if len(line) == 9:
           test, seed, testbench, reason, corner, starttime, duration, logpath, violation = line
-          l[status, corner, testbench].append(test + "__" + seed)
-          d[test + "__" + seed] = Record(duration, starttime, logpath, reason)
+          tn = test + "__" + seed
+          l[status, corner, testbench].append(tn)
+          regress = None
+          if status == "pass":
+            if tn in p_l["pass", corner, testbench]:
+              regress = "unchanged"
+            elif tn in p_l["fail", corner, testbench]:
+              regress = "fixed"
+            elif tn in p_l["timeout", corner, testbench]:
+              regress = "fixed"
+          elif status == "fail":
+            if tn in p_l["fail", corner, testbench]:
+              regress = "unchanged"
+            elif tn in p_l["pass", corner, testbench]:
+              regress = "broken"
+          elif status == "timeout":
+            if tn in p_l["timeout", corner, testbench]:
+              regress = "unchanged"
+            elif tn in p_l["pass", corner, testbench]:
+              regress = "broken"
+          d[test + "__" + seed] = Record(duration, starttime, logpath, reason,regress)
         else:
           print("Formating error, file: " + fn)
-
-# Dict
-
 
 disabled_d = {}
 duplicate_d = {}
@@ -188,27 +207,13 @@ with open(args.dir + "/report/report.xml", "w") as fo:
           match = re.search('(.*)__(.*)', pass_i)
           tgt = match.group(1)
           seed = match.group(2)
-          if pass_i in p_l["pass", corner, testbench]:
-              classn = "pass.still"
-          else:
-              if pass_i in p_l["fail", corner, testbench]:
-                  classn = "pass.fixed"
-              else:
-                  classn = "pass.tbd"
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="' + classn + '" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + pass_d[pass_i].starttime + '" log="' + pass_d[pass_i].logpath + '">\n')
+          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="pass.' + pass_d[pass_i].regress + '" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + pass_d[pass_i].starttime + '" log="' + pass_d[pass_i].logpath + '">\n')
           fo.write('    </testcase>\n')
         for fail_i in l["fail", corner, testbench]:
           match = re.search('(.*)__(.*)', fail_i)
           tgt = match.group(1)
           seed = match.group(2)
-          if fail_i in p_l["pass", corner, testbench]:
-              classn = "fail.broken"
-          else:
-              if fail_i in p_l["fail", corner, testbench]:
-                  classn = "fail.still"
-              else:
-                  classn = "fail.tbd"
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="' + classn + '" reason="' + fail_d[fail_i].reason + '" corner="' + corner + '" target="'
+          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="fail.' + fail_d[fail_i].regress + '" reason="' + fail_d[fail_i].reason + '" corner="' + corner + '" target="'
                    +tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + fail_d[fail_i].starttime + '" log="' + fail_d[fail_i].logpath + '">\n')        
           fo.write('      <failure message="Failed with fail status"/>\n')
           fo.write('  <system-out>\n')
@@ -218,7 +223,7 @@ with open(args.dir + "/report/report.xml", "w") as fo:
           match = re.search('(.*)__(.*)', timeout_i)
           tgt = match.group(1)
           seed = match.group(2)
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="fail.timeout" reason="' + timeout_d[timeout_i].reason + '" corner="' + corner + '" target="'
+          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="timeout" reason="' + timeout_d[timeout_i].reason + '" corner="' + corner + '" target="'
                    +tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + timeout_d[timeout_i].starttime + '" log="'
                    +timeout_d[timeout_i].logpath + '">\n')
           fo.write('      <failure message="Time out"/>\n')
