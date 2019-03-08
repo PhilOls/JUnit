@@ -1,10 +1,4 @@
-import sys, glob, re, os
-import os
-import argparse
-
-import sys, glob, re, os
-import os
-import argparse
+import sys, glob, re, os, argparse
 
 parser = argparse.ArgumentParser(description='Converts csv to JUnit XML file')
 
