@@ -1,31 +1,30 @@
-<?xml-stylesheet href="../../../shared/utils/report.xsl" type="text/xsl"?>
-<testsuites name="testsuites" size="${size}" machine="MacBook-Pro-de-Philippe.local" job="work" build="${env.BUILD_NUMBER}" cover="${cover}" urlroot="./.." version="${env.SVN_REVISION}" tests="7" pass="2" disabled="1" duplicate="1" unknowns="1" fixed="1" broken="1" passrate="28" failures="4">
-  <testsuite  name="top@rtl" tests="7" pass="2" disabled="1" duplicate="1" unknowns="1" fixed="1" broken="1" failures="4">
-    <testcase name="intent.testpasspass_0" classname="pass.still" corner="rtl" target="intent.testpasspass" seed="0" basename="top" time="0:00 sec" log="../log/pass/testpass">
+<testsuites name="testsuites" size="${size}" machine="DESKTOP-6CSCC59" build="${env.BUILD_NUMBER}" cover="${cover}" urlroot="./.." version="${env.SVN_REVISION}" tests="7" pass="2" disabled="1" duplicate="1" unknowns="1" fixed="0" broken="0" passrate="28.571428571428573" failures="4">
+  <testsuite  name="top@rtl" tests="7" pass="2" disabled="1" duplicate="1" unknowns="1" fixed="0" broken="0" failures="4">
+    <testcase name="intent.testpasspass_0" classname="pass.still" corner="rtl" target="intent.testpasspass" seed="0" basename="top" time="0" log="">
     </testcase>
-    <testcase name="intent.testfailfixed_0" classname="pass.fixed" corner="rtl" target="intent.testfailfixed" seed="0" basename="top" time="5:00 sec" log="../log/pass/testpass">
+    <testcase name="intent.testfailfixed_0" classname="pass.still" corner="rtl" target="intent.testfailfixed" seed="0" basename="top" time="0" log="">
     </testcase>
-    <testcase name="intent.testfailfail_0" classname="fail.still" reason="failreason" corner="rtl" target="intent.testfailfail" seed="0" basename="top" time="5:00 sec" log="../log/fail/testfail">
+    <testcase name="intent.testfailfail_0" classname="fail.still" reason="" corner="rtl" target="intent.testfailfail" seed="0" basename="top" time="0" log="">
       <failure message="Failed with fail status"/>
   <system-out>
   </system-out>
 </testcase>
-    <testcase name="intent.testpassbroken_0" classname="fail.broken" reason="noreason" corner="rtl" target="intent.testpassbroken" seed="0" basename="top" time="0:00 sec" log="../log/fail/testfail">
+    <testcase name="intent.testpassbroken_0" classname="fail.still" reason="" corner="rtl" target="intent.testpassbroken" seed="0" basename="top" time="0" log="">
       <failure message="Failed with fail status"/>
   <system-out>
   </system-out>
 </testcase>
-    <testcase name="intent.testtimeout_0" classname="fail.timeout" reason="timeoutreason" corner="rtl" target="intent.testtimeout" seed="0" basename="top" time="9:99 sec" log="../log/timeout/testtimeout">
+    <testcase name="intent.testtimeout_0" classname="fail.timeout" reason="" corner="rtl" target="intent.testtimeout" seed="0" basename="top" time="0" log="">
       <failure message="Time out"/>
     </testcase>
-    <testcase name="intent.testdisabled_0" classname="disabled" reason="disabledreason" corner="rtl" target="intent.testdisabled" seed="0" basename="top" time="0">
+    <testcase name="intent.testdisabled_0" classname="disabled" reason="" corner="rtl" target="intent.testdisabled" seed="0" basename="top" time="0">
       <skipped/>
     </testcase>
     <testcase name="intent.testduplicate_0" classname="duplicate" reason="Skipped" corner="rtl" target="intent.testduplicate" seed="0" basename="top" time="0">
       <skipped/>
     </testcase>
-    <testcase name="intent.teststarted_0" classname="unknown" reason="started/not finished" corner="rtl" target="intent.teststarted" seed="0" basename="top" time="20171231_213100" log="logpath">
-      <failure message="Started but no pass/fail status found. Started at:20171231_213100"/>
+    <testcase name="intent.teststarted_0" classname="unknown" reason="started/not finished" corner="rtl" target="intent.teststarted" seed="0" basename="top" time="0" log="">
+      <failure message="Started but no pass/fail status found. Started at:0"/>
   <system-out>
   </system-out>
 </testcase>
