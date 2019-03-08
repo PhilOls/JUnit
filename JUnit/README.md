@@ -19,9 +19,7 @@ where:
 | target |  test name
 | seed |  integer reflecting seed used
 | testbench |  testbench in which test was run
-| reason |  multiple usage. 
-		> timeout |  can indicate what timeout fired (UVM phase timeout, Ant exec timeout,...) 
-		> disabled |  user information to indficate whyb test is currently disabled
+| reason |  multiple usage <br> timeout  :  can indicate what timeout fired (UVM phase timeout, Ant exec timeout,...) <br> disabled :  user information to indficate whyb test is currently disabled
 | corner |  corner used, most commonly rtl (can also be best, typ, worst, etc....)
 | starttime |  start time+date when test kicked
 | duration |  duration of test in sec
