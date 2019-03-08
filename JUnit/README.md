@@ -1,6 +1,7 @@
 # JUnit
 
-Creation of a custom test report in JUnit xml format from csv delimited files
+Creation of a custom test report in JUnit xml format from csv delimited files.
+
 Direct access to test log is provided by clicking on the testname.
 
 For an example of generated report:
