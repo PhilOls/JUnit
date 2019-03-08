@@ -13,9 +13,6 @@
 
 	<property environment="env"/>
 	<property file="build.properties"/>	
-
-    <available file="python" filepath="${env.PATH}"  property="python.present"/>
-    <available file="xsltproc" filepath="${env.PATH}"  property="xsltproc.present"/>
               	
 	<target name="default">
 		<sequential>

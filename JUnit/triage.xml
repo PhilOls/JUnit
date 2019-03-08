@@ -4,6 +4,21 @@
 	</description>
 	<property environment="env"/>
 
+    <available file="python" filepath="${env.PATH}"  property="python.present"/>
+    <available file="xsltproc" filepath="${env.PATH}"  property="xsltproc.present"/>
+
+	<condition property="isMac">
+  		<os family="mac" />
+	</condition>
+
+	<condition property="isWindows">
+  		<os family="windows" />
+	</condition>
+
+	<condition property="isUnix">
+  		<os family="unix" />
+	</condition>
+
 	<macrodef name="triage">
 		<sequential>
 			<tstamp>
@@ -26,10 +41,10 @@
 				<arg line="-urlroot ${jenkins.url.root}"/>
 			</exec>
 			<echo message="Test report xml generation complete. Starting xsltproc for html now..."/>
-			<exec executable="xsltproc" failonerror="true">
-				<arg value="./report.xsl"/>
+			<exec executable="msxsl" failonerror="true">
 				<arg value="${report.dir}/report/report.xml"/>
-				<redirector output="${report.dir}/report/report.html"/>
+				<arg value="./report.xsl"/>
+				<arg line=" -o ${report.dir}/report/report.html"/>
 			</exec>
 			<echo message="Test report html generation complete. "/>
 			<copy todir="${report.dir}/js"><fileset dir="./js"/></copy>

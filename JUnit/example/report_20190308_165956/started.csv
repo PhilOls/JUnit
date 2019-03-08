@@ -1,0 +1,6 @@
+intent.teststarted,0,top,noreason,rtl,20171231_213100,0:00 sec,logpath,0
+intent.testpasspass,0,top,passreason,rtl,20171231_213100,2:00 sec,logpath,0
+intent.testpassbroken,0,top,passreason,rtl,20171231_213100,2:00 sec,logpath,0
+intent.testfailfail,0,top,failreason,rtl,20171231_213200,4:00 sec,logpath,0
+intent.testfailfixed,0,top,failreason,rtl,20171231_213200,4:00 sec,logpath,0
+intent.testtimeout,0,top,timeoutreason,rtl,20171231_213300,5:00 sec,logpath,0
