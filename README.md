@@ -36,6 +36,9 @@ What things you need to install the software and how to install them
 ```
 Give examples
 ```
+#### Windows
+* [MSXSL] (https://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=21714) - MSXSL
+
 
 ### Installing
 
