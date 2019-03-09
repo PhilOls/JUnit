@@ -9,7 +9,9 @@ http://htmlpreview.github.io/?https://github.com/PhilOls/JUnit/blob/master/JUnit
 
 JUnit can be used with continuous integration tools like Jenkins, Bamboo and point to stored artifacts for each build
 
-The format of each csv file is the same.Each line consists in:
+The format of each csv file is the same.
+
+Each line corresponds to a testcase and consists in:
 target,seed,testbench,reason,corner,starttime,duration,logpath,violation
 
 where:
