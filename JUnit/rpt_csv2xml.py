@@ -78,6 +78,12 @@ class Testcase:
     '''Doc - JUnit classname attribute'''
     return(self.status+"."+self.regress)
   
+  def as_pass(self):
+    self.status = "pass"
+
+  def as_fail(self):
+    self.status = "pass"
+    
   def xml_out(self,f):
     indent = "  "
     f.write(indent+
@@ -103,14 +109,12 @@ class Testcase:
       f.write(indent+  '  <skipped/>\n')
     elif self.status=="duplicate":
       f.write(indent+  '  <skipped/>\n')
-    elif self.status=="started":
-      f.write(indent + '  <failure message="Started but no pass/fail status found. Started at:' + self.time + '"/>\n')
-      f.write(indent + '  <system-out>\n')
-      f.write(indent + '  </system-out>\n')
 
     f.write(indent+'</testcase>\n')
 
-def parseFile(status, d):
+tc_l = []
+
+def parseFile(status):
   fn = args.dir + "/report/" + status + ".csv"
   if os.path.isfile(fn):
     with open(fn, "r") as fcsv:
@@ -138,18 +142,11 @@ def parseFile(status, d):
               regress = "unchanged"
             elif tn in p_l["pass", corner, testbench]:
               regress = "broken"
-          d[test + "__" + seed] = Testcase(corner, testbench, test, seed, status, duration, time, log, reason, regress)
+          tc_l.append(Testcase(corner, testbench, test, seed, status, duration, time, log, reason, regress))
         else:
           print("Formating error, file: " + fn)
 
-disabled_d = {}
-duplicate_d = {}
-timeout_d = {}
-fail_d = {}
-pass_d = {}
-started_d = {}
-
-# # Parse csv files
+# Parse csv files
 
 if pfound:
   for status in ["fail", "pass", "timeout"]:
@@ -164,12 +161,12 @@ if pfound:
           else:
             print("Formating error, file: " + fn)
 
-parseFile("started", started_d)
-parseFile("fail", fail_d)
-parseFile("pass", pass_d)
-parseFile("timeout", timeout_d)
-parseFile("disabled", disabled_d)
-parseFile("duplicate", duplicate_d)
+parseFile("started")
+parseFile("fail")
+parseFile("pass")
+parseFile("timeout")
+parseFile("disabled")
+parseFile("duplicate")
 
 # # Generates XML file
   
@@ -239,9 +236,11 @@ with open(args.dir + "/report/report.xml", "w") as fo:
   
   for corner in args.corners:
     for testbench in args.testbenches:
+      started  = [i for i in tc_l if i.status == "started" and i.testbench == testbench and i.corner == corner]
+      disabled = [i for i in tc_l if i.status == "disabled" and i.testbench == testbench and i.corner == corner]
       if len(l["started", corner, testbench]) + len(l["disabled", corner, testbench]) > 0 :
         fo.write('  <testsuite  name="' + testbench + '@' + corner + 
-          '" tests="'     + str(len(l["started", corner, testbench]) + len(l["disabled", corner, testbench])) + 
+          '" tests="'     + str(len(started) + len(disabled)) + 
           '" pass="'      + str(len(l["pass", corner, testbench])) + 
           '" disabled="'  + str(len(l["disabled", corner, testbench])) + 
           '" duplicate="' + str(len(l["duplicate", corner, testbench])) + 
@@ -249,21 +248,15 @@ with open(args.dir + "/report/report.xml", "w") as fo:
           '" fixed="'     + str(fixed) + 
           '" broken="'    + str(broken) + 
           '" failures="'  + str(len(l["started", corner, testbench]) - len(l["pass", corner, testbench])) + '">\n')
-        for i in l["pass", corner, testbench]:
-          pass_d[i].xml_out(fo)
-        for i in l["fail", corner, testbench]:
-          fail_d[i].xml_out(fo)
-        for i in l["timeout", corner, testbench]:
-          timeout_d[i].xml_out(fo)
-        for i in l["disabled", corner, testbench]:
-          disabled_d[i].xml_out(fo)
-        for i in l["duplicate", corner, testbench]:
-          duplicate_d[i].xml_out(fo)
-        for i in l["started", corner, testbench]:
-          if not i in l["fail", corner, testbench]:
-            if not i in l["pass", corner, testbench]:
-              if not i in l["timeout", corner, testbench]:
-                if not i in l["disabled", corner, testbench]:
-                  started_d[i].xml_out(fo)
+        for i in tc_l:
+          if not i.status == "started":
+            i.xml_out(fo)
+          else:
+            if not i in l["fail", corner, testbench]:
+              if not i in l["pass", corner, testbench]:
+                if not i in l["timeout", corner, testbench]:
+                  if not i in l["disabled", corner, testbench]:
+                    i.xml_out(fo)
+            
         fo.write('  </testsuite>\n')
   fo.write('</testsuites>\n')
