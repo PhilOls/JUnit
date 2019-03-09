@@ -52,17 +52,63 @@ for corner in args.corners:
 # # Dictionnaries to hold information for each test
 
 
-class Record:
+class Testcase:
+  '''Doc - object storing all required data for a single testcase'''
 
-  def __init__(self, duration, starttime, logpath, reason, regress = None):
-    self.duration = "0"
-    self.starttime = "0"
-    self.logpath = ""
-    self.reason = ""
+  def __init__(self, corner, testbench, test, seed, status, duration, time, log, reason, regress = None):
+    self.corner = corner
+    self.testbench = testbench
+    self.test = test
+    self.seed = seed
+    self.status = status
+    self.duration = duration
+    self.time = time
+    self.log = log
+    self.reason = reason
     if regress is None:
       self.regress = "tbd"
     else:
       self.regress = regress
+      
+  def testname(self):
+    '''Doc - JUnit testname attribute'''
+    return(self.test+"_"+self.seed)
+  
+  def classname(self):
+    '''Doc - JUnit classname attribute'''
+    return(self.status+"."+self.regress)
+  
+  def xml_out(self,f):
+    indent = "  "
+    f.write(indent+
+            '<testcase' +
+            ' name="'       + self.testname()  + '"' +
+            ' classname="'  + self.classname() + '"' +
+            ' corner="'     + self.corner      + '"' +
+            ' target="'     + self.test        + '"' +
+            ' seed="'       + self.seed        + '"' +
+            ' basename="'   + self.testbench   + '"' +
+            ' time="'       + self.time        + '"' +
+            ' log="'        + self.log         + '"' +
+            '>\n')
+    
+    if self.status=="fail":
+      f.write(indent + '  <failure message="Failed with fail status"/>\n')
+      f.write(indent + '  <system-out>\n')
+      #TBD
+      f.write(indent +'  </system-out>\n')
+    elif self.status=="timeout":
+      f.write(indent+  '  <failure message="Time out"/>\n')
+    elif self.status=="disable":
+      f.write(indent+  '  <skipped/>\n')
+    elif self.status=="duplicate":
+      f.write(indent+  '  <skipped/>\n')
+    elif self.status=="started":
+      f.write(indent + '  <failure message="Started but no pass/fail status found. Started at:' + self.time + '"/>\n')
+      f.write(indent + '  <system-out>\n')
+      f.write(indent + '  </system-out>\n')
+
+    f.write(indent+'</testcase>\n')
 
 def parseFile(status, d):
   fn = args.dir + "/report/" + status + ".csv"
@@ -71,7 +117,7 @@ def parseFile(status, d):
       csvreader = csv.reader(fcsv, delimiter=',', quotechar='|')
       for line in csvreader:
         if len(line) == 9:
-          test, seed, testbench, reason, corner, starttime, duration, logpath, violation = line
+          test, seed, testbench, reason, corner, time, duration, log, violation = line
           tn = test + "__" + seed
           l[status, corner, testbench].append(tn)
           regress = None
@@ -92,7 +138,7 @@ def parseFile(status, d):
               regress = "unchanged"
             elif tn in p_l["pass", corner, testbench]:
               regress = "broken"
-          d[test + "__" + seed] = Record(duration, starttime, logpath, reason,regress)
+          d[test + "__" + seed] = Testcase(corner, testbench, test, seed, status, duration, time, log, reason, regress)
         else:
           print("Formating error, file: " + fn)
 
@@ -105,13 +151,6 @@ started_d = {}
 
 # # Parse csv files
 
-parseFile("started", started_d)
-parseFile("fail", fail_d)
-parseFile("pass", pass_d)
-parseFile("timeout", timeout_d)
-parseFile("disabled", disabled_d)
-parseFile("duplicate", duplicate_d)
-
 if pfound:
   for status in ["fail", "pass", "timeout"]:
     if os.path.isfile(latest + "/" + status + ".csv"):
@@ -120,10 +159,17 @@ if pfound:
         csvreader = csv.reader(fcsv, delimiter=',', quotechar='|')
         for line in csvreader:
           if len(line) == 9:
-            target, seed, testbench, reason, corner, starttime, duration, logpath, violation = line
+            target, seed, testbench, reason, corner, time, duration, log, violation = line
             p_l[status, corner, testbench].append(target + "__" + seed)
           else:
             print("Formating error, file: " + fn)
+
+parseFile("started", started_d)
+parseFile("fail", fail_d)
+parseFile("pass", pass_d)
+parseFile("timeout", timeout_d)
+parseFile("disabled", disabled_d)
+parseFile("duplicate", duplicate_d)
 
 # # Generates XML file
   
@@ -195,67 +241,29 @@ with open(args.dir + "/report/report.xml", "w") as fo:
     for testbench in args.testbenches:
       if len(l["started", corner, testbench]) + len(l["disabled", corner, testbench]) > 0 :
         fo.write('  <testsuite  name="' + testbench + '@' + corner + 
-          '" tests="' + str(len(l["started", corner, testbench]) + len(l["disabled", corner, testbench])) + 
-          '" pass="' + str(len(l["pass", corner, testbench])) + 
-          '" disabled="' + str(len(l["disabled", corner, testbench])) + 
+          '" tests="'     + str(len(l["started", corner, testbench]) + len(l["disabled", corner, testbench])) + 
+          '" pass="'      + str(len(l["pass", corner, testbench])) + 
+          '" disabled="'  + str(len(l["disabled", corner, testbench])) + 
           '" duplicate="' + str(len(l["duplicate", corner, testbench])) + 
-          '" unknowns="' + str(unknowns_l[corner, testbench]) + 
-          '" fixed="' + str(fixed) + 
-          '" broken="' + str(broken) + 
-          '" failures="' + str(len(l["started", corner, testbench]) - len(l["pass", corner, testbench])) + '">\n')
-        for pass_i in l["pass", corner, testbench]:
-          match = re.search('(.*)__(.*)', pass_i)
-          tgt = match.group(1)
-          seed = match.group(2)
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="pass.' + pass_d[pass_i].regress + '" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + pass_d[pass_i].starttime + '" log="' + pass_d[pass_i].logpath + '">\n')
-          fo.write('    </testcase>\n')
-        for fail_i in l["fail", corner, testbench]:
-          match = re.search('(.*)__(.*)', fail_i)
-          tgt = match.group(1)
-          seed = match.group(2)
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="fail.' + fail_d[fail_i].regress + '" reason="' + fail_d[fail_i].reason + '" corner="' + corner + '" target="'
-                   +tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + fail_d[fail_i].starttime + '" log="' + fail_d[fail_i].logpath + '">\n')        
-          fo.write('      <failure message="Failed with fail status"/>\n')
-          fo.write('  <system-out>\n')
-          fo.write('  </system-out>\n')
-          fo.write('</testcase>\n')
-        for timeout_i in l["timeout", corner, testbench]:
-          match = re.search('(.*)__(.*)', timeout_i)
-          tgt = match.group(1)
-          seed = match.group(2)
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="timeout" reason="' + timeout_d[timeout_i].reason + '" corner="' + corner + '" target="'
-                   +tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + timeout_d[timeout_i].starttime + '" log="'
-                   +timeout_d[timeout_i].logpath + '">\n')
-          fo.write('      <failure message="Time out"/>\n')
-          fo.write('    </testcase>\n')
-        for disabled_i in l["disabled", corner, testbench]:
-          match = re.search('(.*)__(.*)', disabled_i)
-          tgt = match.group(1)
-          seed = match.group(2)
-          rn = disabled_d[disabled_i].reason
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="disabled" reason="' + rn + '" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="0">\n')
-          fo.write('      <skipped/>\n')
-          fo.write('    </testcase>\n')
-        for duplicate_i in l["duplicate", corner, testbench]:
-          match = re.search('(.*)__(.*)', duplicate_i)
-          tgt = match.group(1)
-          seed = match.group(2)
-          rn = duplicate_d[duplicate_i].reason
-          fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="duplicate" reason="Skipped" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="0">\n')
-          fo.write('      <skipped/>\n')
-          fo.write('    </testcase>\n')
-        for started_i in l["started", corner, testbench]:
-          if not started_i in l["fail", corner, testbench]:
-            if not started_i in l["pass", corner, testbench]:
-              if not started_i in l["timeout", corner, testbench]:
-                if not started_i in l["disabled", corner, testbench]:
-                  match = re.search('(.*)__(.*)', started_i)
-                  tgt = match.group(1)
-                  seed = match.group(2)
-                  fo.write('    <testcase name="' + tgt + '_' + seed + '" classname="unknown" reason="started/not finished" corner="' + corner + '" target="' + tgt + '" seed="' + seed + '" basename="' + testbench + '" time="' + started_d[started_i].starttime + '" log="' + started_d[started_i].logpath + '">\n')
-                  fo.write('      <failure message="Started but no pass/fail status found. Started at:' + started_d[started_i].starttime + '"/>\n')
-                  fo.write('  <system-out>\n')
-                  fo.write('  </system-out>\n')
-                  fo.write('</testcase>\n')
+          '" unknowns="'  + str(unknowns_l[corner, testbench]) + 
+          '" fixed="'     + str(fixed) + 
+          '" broken="'    + str(broken) + 
+          '" failures="'  + str(len(l["started", corner, testbench]) - len(l["pass", corner, testbench])) + '">\n')
+        for i in l["pass", corner, testbench]:
+          pass_d[i].xml_out(fo)
+        for i in l["fail", corner, testbench]:
+          fail_d[i].xml_out(fo)
+        for i in l["timeout", corner, testbench]:
+          timeout_d[i].xml_out(fo)
+        for i in l["disabled", corner, testbench]:
+          disabled_d[i].xml_out(fo)
+        for i in l["duplicate", corner, testbench]:
+          duplicate_d[i].xml_out(fo)
+        for i in l["started", corner, testbench]:
+          if not i in l["fail", corner, testbench]:
+            if not i in l["pass", corner, testbench]:
+              if not i in l["timeout", corner, testbench]:
+                if not i in l["disabled", corner, testbench]:
+                  started_d[i].xml_out(fo)
         fo.write('  </testsuite>\n')
   fo.write('</testsuites>\n')

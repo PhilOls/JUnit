@@ -203,7 +203,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Fixed</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='pass.still'">
+  <xsl:when test="@classname='pass.unchanged'">
   <tr style="width: 3.2em; color: 000000; background-color: #B8FFB8; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
     <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -245,7 +245,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Fail</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='fail.still'">
+  <xsl:when test="@classname='fail.unchanged'">
   <tr style="width: 3.2em; color: #ffffff; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
   <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -274,7 +274,21 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Broken</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='fail.timeout'">
+  <xsl:when test="@classname='timeout.tbd'">
+  <tr style="width: 3.2em; color: #000000; background-color: #FFB5A1; border-width:1px; border-style:solid; border-color:black">&nbsp;
+  <td align="left">
+  <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
+  </td>&nbsp;
+  <td align="right"><xsl:value-of select="@seed"/></td>&nbsp;
+  <td align="right"><xsl:value-of select="@basename"/></td>&nbsp;
+  <td align="right"><xsl:value-of select="@corner"/></td>&nbsp;
+  <td align="right"><xsl:value-of select="@tv"/></td>&nbsp;
+  <td align="right"><xsl:value-of select="@classname"/></td>&nbsp;
+  <td align="right"><xsl:value-of select="@time"/></td>&nbsp;
+  <td align="right">Timeout</td>&nbsp;
+  </tr>&nbsp;
+  </xsl:when>
+  <xsl:when test="@classname='timeout.unchanged'">
   <tr style="width: 3.2em; color: #000000; background-color: #FFB5A1; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
   <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
