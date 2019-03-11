@@ -246,7 +246,8 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   </tr>&nbsp;
   </xsl:when>
   <xsl:when test="@classname='fail.unchanged'">
-  <tr style="width: 3.2em; color: #ffffff; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
+  <xsl:variable name="color" select="ffffff" />
+  <tr color="$color" style="width: 3.2em; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
   <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
   </td>&nbsp;

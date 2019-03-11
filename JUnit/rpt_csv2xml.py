@@ -1,4 +1,5 @@
 import sys, glob, re, os, argparse, csv
+from http.client import _CS_REQ_STARTED
 
 parser = argparse.ArgumentParser(description='Converts csv to JUnit XML file')
 
@@ -16,19 +17,8 @@ args = parser.parse_args()
 args.corners = args.corners.split(",")
 args.testbenches = args.testbenches.split(",")
 
-# # Checks if previous report exists and retrieve most recent one if any.
-pfound = 0
-latest = ""
 
-print("Lookup ref report:" + args.dir + '/report_*')
-
-l = glob.glob(args.dir + '/report_*')
-if l == []:
-  pfound = 0
-else:
-  latest = max(glob.iglob(args.dir + '/report_*'), key=os.path.getctime)
-  pfound = 1
-  print("Found ref report:" + latest)
+status_l =["started", "fail", "pass", "timeout", "disabled", "duplicate"]
 
 path = os.getcwd()
 path = path.rsplit('/')
@@ -37,39 +27,14 @@ print("path=")
 print(path)
 # job=path[2]
 
-# # List and dictionaries of tests per status category
-# # When _p_ is used, this is for list of tests from
-# # previous reports (used to detect broken or fixed tests)
-l = {}
-p_l = {}
- 
-for corner in args.corners:
-  for testbench in args.testbenches:
-      for status in ["started", "fail", "pass", "timeout", "disabled", "duplicate", "broken", "fixed"]:
-          l[status, corner, testbench] = []
-          p_l[status, corner, testbench] = []
-
-# # Dictionnaries to hold information for each test
-
-
-class Testcase:
+class TestCase:
   '''Doc - object storing all required data for a single testcase'''
 
-  def __init__(self, corner, testbench, test, seed, status, duration, time, log, reason, regress = None):
-    self.corner = corner
-    self.testbench = testbench
-    self.test = test
-    self.seed = seed
+  def __init__(self, status, line):
+    self.test, self.seed, self.testbench, self.reason, self.corner, self.time, self.duration, self.log, self.violation = line
     self.status = status
-    self.duration = duration
-    self.time = time
-    self.log = log
-    self.reason = reason
-    if regress is None:
-      self.regress = "tbd"
-    else:
-      self.regress = regress
-      
+    self.regress = "tbd"
+
   def testname(self):
     '''Doc - JUnit testname attribute'''
     return(self.test+"_"+self.seed)
@@ -78,15 +43,9 @@ class Testcase:
     '''Doc - JUnit classname attribute'''
     return(self.status+"."+self.regress)
   
-  def as_pass(self):
-    self.status = "pass"
-
-  def as_fail(self):
-    self.status = "pass"
-    
-  def xml_out(self,f):
-    indent = "  "
-    f.write(indent+
+  def xml_out(self):
+    indent = "    "
+    xml = (indent+
             '<testcase' +
             ' name="'       + self.testname()  + '"' +
             ' classname="'  + self.classname() + '"' +
@@ -97,166 +56,140 @@ class Testcase:
             ' time="'       + self.time        + '"' +
             ' log="'        + self.log         + '"' +
             '>\n')
-    
     if self.status=="fail":
-      f.write(indent + '  <failure message="Failed with fail status"/>\n')
-      f.write(indent + '  <system-out>\n')
+      xml += indent + '  <failure message="Failed with fail status"/>\n'
+      xml += indent + '  <system-out>\n'
       #TBD
-      f.write(indent +'  </system-out>\n')
+      xml += indent +'  </system-out>\n'
     elif self.status=="timeout":
-      f.write(indent+  '  <failure message="Time out"/>\n')
+      xml += indent+  '  <failure message="Time out"/>\n'
     elif self.status=="disable":
-      f.write(indent+  '  <skipped/>\n')
+      xml += indent+  '  <skipped/>\n'
     elif self.status=="duplicate":
-      f.write(indent+  '  <skipped/>\n')
+      xml += indent+  '  <skipped/>\n'
+    xml += indent+'</testcase>\n'
+    return (xml)
 
-    f.write(indent+'</testcase>\n')
+class TestSuite:
+  '''Doc - object storing all required data for a single testsuite'''
 
-tc_l = []
+  def __init__(self,corner,testbench):
+    self.tc_l = []
+    self.corner = corner
+    self.testbench = testbench
+    
+  def add(self, testcase):
+    '''Doc - add a testcase to testsuite. If testcase already exists with status=started, remove it'''
+    for tc in self.tc_l:
+      if tc.testname() == testcase.testname() and tc.status == "started":
+        self.tc_l.remove(tc)
+    self.tc_l.append(testcase)
+    
+  def xml_out(self):
+    indent = "  "
+    xml = indent  + '<testsuite  name="' + self.testbench + '@' + self.corner +'"' 
+    xml += ' tests="'      + str(len([i for i in self.tc_l if i.status in ["started","pass","fail","timeout"]]))                + '"'
+    xml += ' pass="'       + str(len([i for i in self.tc_l if i.status == "pass"]))                                             + '"'
+    xml += ' disabled="'   + str(len([i for i in self.tc_l if i.status == "disabled"]))                                         + '"'
+    xml += ' duplicate="'  + str(len([i for i in self.tc_l if i.status == "duplicate"]))                                        + '"'
+    xml += ' unknowns="'   + str(len([i for i in self.tc_l if i.status == "started"]))                                          + '"'
+    xml += ' fixed="'      + str(len([i for i in self.tc_l if i.regress == "fixed"]))                                           + '"'
+    xml += ' broken="'     + str(len([i for i in self.tc_l if i.regress == "broken"]))                                          + '"'
+    xml += ' failures="'   + str(len([i for i in self.tc_l if i.status in ["started","fail","timeout"]]))                       + '"'
+    xml += '>\n'
+    for tc in self.tc_l:
+      xml+= tc.xml_out()
+    xml += indent  + '</testsuite>\n' 
 
-def parseFile(status):
-  fn = args.dir + "/report/" + status + ".csv"
-  if os.path.isfile(fn):
-    with open(fn, "r") as fcsv:
+    return (xml)
+
+class TestSuites:
+  '''Doc - object storing all required data for a single testsuite'''
+
+  def __init__(self):
+    self.ts_l = []
+  
+  def xml_out(self):
+    indent = ""
+    xml = indent + '<testsuites name="testsuites"'
+    xml += ' size="' + args.size +'"'
+    xml += ' machine="' + args.machine +'"'
+  #  +'" job="'+job
+    xml += ' build="' + args.build +'"'
+    xml += ' cover="' + args.cover +'"'
+    xml += ' urlroot="' + args.urlroot +'"'
+    xml += ' version="' + args.version +'"'
+    tests = 0
+    passed = 0
+    fails = 0
+    disabled = 0
+    duplicates = 0
+    fixed = 0
+    broken = 0
+    unknowns = 0
+    for ts in self.ts_l:
+      tests      += len([i for i in ts.tc_l if i.status  in ["pass","fail","started","timeout"]])
+      passed     += len([i for i in ts.tc_l if i.status  in ["pass"]])
+      fails      += len([i for i in ts.tc_l if i.status  in ["fail","timeout"]])
+      unknowns   += len([i for i in ts.tc_l if i.status  in ["started"]])
+      disabled   += len([i for i in ts.tc_l if i.status  in ["disabled"]])
+      duplicates += len([i for i in ts.tc_l if i.status  in ["duplicates"]])
+      fixed      += len([i for i in ts.tc_l if i.regress in ["fixed"]])
+      broken     += len([i for i in ts.tc_l if i.regress in ["broken"]])
+    xml += ' tests="'     + str(tests)      +'"'
+    xml += ' pass="'      + str(passed)     +'"'
+    xml += ' failures="'  + str(fails)      +'"'
+    xml += ' disabled="'  + str(disabled)   +'"'
+    xml += ' duplicate="' + str(duplicates) +'"'
+    xml += ' unknowns="'  + str(unknowns)    +'"'
+    xml += ' fixed="'     + str(fixed)      +'"'
+    xml += ' broken="'    + str(broken)     +'"'
+    xml += '>\n'
+    for ts in self.ts_l:
+      xml += ts.xml_out()
+    xml += '</testsuites>\n'
+    return (xml)
+
+def parseFile(file, status, tss):
+  if os.path.isfile(file):
+    with open(file, "r") as fcsv:
       csvreader = csv.reader(fcsv, delimiter=',', quotechar='|')
       for line in csvreader:
         if len(line) == 9:
-          test, seed, testbench, reason, corner, time, duration, log, violation = line
-          tn = test + "__" + seed
-          l[status, corner, testbench].append(tn)
-          regress = None
-          if status == "pass":
-            if tn in p_l["pass", corner, testbench]:
-              regress = "unchanged"
-            elif tn in p_l["fail", corner, testbench]:
-              regress = "fixed"
-            elif tn in p_l["timeout", corner, testbench]:
-              regress = "fixed"
-          elif status == "fail":
-            if tn in p_l["fail", corner, testbench]:
-              regress = "unchanged"
-            elif tn in p_l["pass", corner, testbench]:
-              regress = "broken"
-          elif status == "timeout":
-            if tn in p_l["timeout", corner, testbench]:
-              regress = "unchanged"
-            elif tn in p_l["pass", corner, testbench]:
-              regress = "broken"
-          tc_l.append(Testcase(corner, testbench, test, seed, status, duration, time, log, reason, regress))
+          testbench = line[2]
+          corner = line[4]
+          if len([i for i in tss.ts_l if i.corner == corner and i.testbench == testbench])<1:
+            tss.ts_l.append(TestSuite(corner,testbench))
+          for i in [i for i in tss.ts_l if i.corner == corner and i.testbench == testbench]:
+            i.add(TestCase(status, line))
         else:
           print("Formating error, file: " + fn)
 
-# Parse csv files
+print("Lookup ref report:" + args.dir + '/report_*')
 
-if pfound:
-  for status in ["fail", "pass", "timeout"]:
-    if os.path.isfile(latest + "/" + status + ".csv"):
-      fn = latest + "/" + status + ".csv"
-      with open(fn, "r") as fcsv:
-        csvreader = csv.reader(fcsv, delimiter=',', quotechar='|')
-        for line in csvreader:
-          if len(line) == 9:
-            target, seed, testbench, reason, corner, time, duration, log, violation = line
-            p_l[status, corner, testbench].append(target + "__" + seed)
-          else:
-            print("Formating error, file: " + fn)
+prev_tss = TestSuites()
 
-parseFile("started")
-parseFile("fail")
-parseFile("pass")
-parseFile("timeout")
-parseFile("disabled")
-parseFile("duplicate")
+if glob.glob(args.dir + '/report_*'):
+  latest = max(glob.iglob(args.dir + '/report_*'), key=os.path.getctime)
+  print("Found ref report:" + latest)
+  for status in status_l:
+    parseFile(latest + "/" + status + ".csv", status, prev_tss)
 
-# # Generates XML file
-  
+tss = TestSuites()
+    
+for status in status_l:
+  parseFile(args.dir + "/report/" + status + ".csv", status, tss)
+
+for prev_ts in prev_tss.ts_l:
+  for ts in [i for i in tss.ts_l if i.testbench == prev_ts.testbench and i.corner == prev_ts.corner]:
+    for prev_tc in prev_ts.tc_l:
+      for tc in [i for i in ts.tc_l if i.test == prev_tc.test and i.seed == prev_tc.seed]:
+        if (tc.status == prev_tc.status):
+          tc.regress = "unchanged"
+        elif tc.status == "pass" and prev_tc.status in ["fail", "timeout"] :
+          tc.regress = "fixed"
+        elif tc.status in ["fail","timeout"] and prev_tc.status == "pass" :
+          tc.regress = "broken"
+
 with open(args.dir + "/report/report.xml", "w") as fo: 
-
-  tests = 0
-  passed = 0
-  disabled = 0
-  duplicate = 0
-  failures = 0
-  
-  for corner in args.corners:
-    for testbench in args.testbenches:
-      tests = tests + len(l["started", corner, testbench] + l["disabled", corner, testbench])
-      passed = passed + len(l["pass", corner, testbench])
-      disabled = disabled + len(l["disabled", corner, testbench])
-      duplicate = duplicate + len(l["duplicate", corner, testbench])
-      failures = failures + len(l["started", corner, testbench]) - len(l["pass", corner, testbench])
-  
-  unknowns = 0    
-  unknowns_l = {}
-  for corner in args.corners:
-    for testbench in args.testbenches:
-      unknowns_l[corner, testbench] = 0
-      if len(l["started", corner, testbench]) + len(l["disabled", corner, testbench]) > 0 :
-        for started_i in l["started", corner, testbench]:
-          if not started_i in l["fail", corner, testbench]:
-            if not started_i in l["pass", corner, testbench]:
-              if not started_i in l["timeout", corner, testbench]:
-                if not started_i in l["disabled", corner, testbench]:
-                  unknowns = unknowns + 1
-                  unknowns_l[corner, testbench] = unknowns_l[corner, testbench] + 1
-  
-  fixed = 0
-  broken = 0
-  for corner in args.corners:
-    for testbench in args.testbenches:
-      for pass_i in l["pass", corner, testbench]:
-        if pass_i in p_l["fail", corner, testbench]:
-          fixed = fixed + 1
-      for fail_i in l["fail", corner, testbench]:
-        if fail_i in p_l["pass", corner, testbench]:
-          broken = broken + 1
-  
-  fo.write(
-    '<testsuites name="testsuites"'
-    +' size="' + args.size
-    +'" machine="' + args.machine
-  #  +'" job="'+job
-    +'" build="' + args.build
-    +'" cover="' + args.cover
-    +'" urlroot="' + args.urlroot
-    +'" version="' + args.version
-    +'" tests="' + str(tests)
-    +'" pass="' + str(passed)
-    +'" disabled="' + str(disabled)
-    +'" duplicate="' + str(duplicate)
-    +'" unknowns="' + str(unknowns)
-    +'" fixed="' + str(fixed)
-    +'" broken="' + str(broken))
-  
-  if tests - duplicate > 0:
-    fo.write('" passrate="' + str(passed * 100 / (tests))
-    +'" failures="' + str(failures) + '">\n')
-  else:
-    fo.write('" failures="' + str(failures) + '">\n')
-  
-  for corner in args.corners:
-    for testbench in args.testbenches:
-      started  = [i for i in tc_l if i.status == "started" and i.testbench == testbench and i.corner == corner]
-      disabled = [i for i in tc_l if i.status == "disabled" and i.testbench == testbench and i.corner == corner]
-      if len(l["started", corner, testbench]) + len(l["disabled", corner, testbench]) > 0 :
-        fo.write('  <testsuite  name="' + testbench + '@' + corner + 
-          '" tests="'     + str(len(started) + len(disabled)) + 
-          '" pass="'      + str(len(l["pass", corner, testbench])) + 
-          '" disabled="'  + str(len(l["disabled", corner, testbench])) + 
-          '" duplicate="' + str(len(l["duplicate", corner, testbench])) + 
-          '" unknowns="'  + str(unknowns_l[corner, testbench]) + 
-          '" fixed="'     + str(fixed) + 
-          '" broken="'    + str(broken) + 
-          '" failures="'  + str(len(l["started", corner, testbench]) - len(l["pass", corner, testbench])) + '">\n')
-        for i in tc_l:
-          if not i.status == "started":
-            i.xml_out(fo)
-          else:
-            if not i in l["fail", corner, testbench]:
-              if not i in l["pass", corner, testbench]:
-                if not i in l["timeout", corner, testbench]:
-                  if not i in l["disabled", corner, testbench]:
-                    i.xml_out(fo)
-            
-        fo.write('  </testsuite>\n')
-  fo.write('</testsuites>\n')
+  fo.write(tss.xml_out())
