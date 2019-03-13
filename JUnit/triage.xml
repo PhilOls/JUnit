@@ -29,7 +29,7 @@
 			<exec executable="hostname" outputproperty="hostname"/>
 			<mkdir dir="${report.dir}"/>
 			<exec executable="python" failonerror="true">
-				<arg value="./rpt_csv2xml.py"/>
+				<arg value="./csv2xml.py"/>
 				<arg line="-dir ${report.dir}"/>
 				<arg line="-size ${size}"/>
 				<arg line="-machine ${hostname}"/>
@@ -70,6 +70,11 @@
 					</if>
 				</else>
 			</if>
+			<echo message="Starting python for xml to sql now..."/>
+			<exec executable="python" failonerror="true">
+				<arg value="./xml2sql.py"/>
+				<arg line="-db testsuites"/>
+			</exec>
 		</sequential>
 	</macrodef>
 

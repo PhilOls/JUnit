@@ -88,7 +88,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
     <th scope="col">Name</th>&nbsp;
     <th scope="col">Passrate</th>&nbsp;
     <th scope="col">Total</th>&nbsp;
-    <th scope="col">Pass</th>&nbsp;
+    <th scope="col">passed</th>&nbsp;
     <th scope="col">Disabled</th>&nbsp;
     <th scope="col">Failure</th>&nbsp;
     <th scope="col">Unknown</th>&nbsp;
@@ -102,7 +102,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
     <td align="right"><xsl:value-of select="All"/></td>&nbsp;
     <td align="right"><xsl:value-of select="testsuites/@passrate"/>%</td>&nbsp;
     <td align="right"><xsl:value-of select="testsuites/@tests"/></td>&nbsp;
-    <td align="right"><xsl:value-of select="testsuites/@pass"/></td>&nbsp;
+    <td align="right"><xsl:value-of select="testsuites/@passed"/></td>&nbsp;
     <td align="right"><xsl:value-of select="testsuites/@disabled"/></td>&nbsp;
     <td align="right"><xsl:value-of select="testsuites/@failures"/></td>&nbsp;
     <td align="right"><xsl:value-of select="testsuites/@unknowns"/></td>&nbsp;
@@ -117,7 +117,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
     <td align="right"><xsl:value-of select="@name"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@passrate"/>%</td>&nbsp;
     <td align="right"><xsl:value-of select="@tests"/></td>&nbsp;
-    <td align="right"><xsl:value-of select="@pass"/></td>&nbsp;
+    <td align="right"><xsl:value-of select="@passed"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@disabled"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@failures"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@unknowns"/></td>&nbsp;
@@ -131,7 +131,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
     <td align="right"><xsl:value-of select="@name"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@passrate"/>%</td>&nbsp;
     <td align="right"><xsl:value-of select="@tests"/></td>&nbsp;
-    <td align="right"><xsl:value-of select="@pass"/></td>&nbsp;
+    <td align="right"><xsl:value-of select="@passed"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@disabled"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@failures"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@unknowns"/></td>&nbsp;
@@ -145,7 +145,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
     <td align="right"><xsl:value-of select="@name"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@passrate"/>%</td>&nbsp;
     <td align="right"><xsl:value-of select="@tests"/></td>&nbsp;
-    <td align="right"><xsl:value-of select="@pass"/></td>&nbsp;
+    <td align="right"><xsl:value-of select="@passed"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@disabled"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@failures"/></td>&nbsp;
     <td align="right"><xsl:value-of select="@unknowns"/></td>&nbsp;
@@ -175,7 +175,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <tbody>&nbsp;
   <xsl:for-each select="testsuites/testsuite/testcase">
   <xsl:choose>
-  <xsl:when test="@classname='pass'">
+  <xsl:when test="@classname='passed'">
   <tr style="width: 3.2em; color: 000000; background-color: #B8FFB8; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
     <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -189,7 +189,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Success</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='pass.fixed'">
+  <xsl:when test="@classname='passed.fixed'">
   <tr style="font-weight: bold; width: 3.2em; color: 000000; background-color: #B8FFB8; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
     <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -203,7 +203,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Fixed</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='pass.unchanged'">
+  <xsl:when test="@classname='passed.unchanged'">
   <tr style="width: 3.2em; color: 000000; background-color: #B8FFB8; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
     <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -217,7 +217,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Success</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='pass.tbd'">
+  <xsl:when test="@classname='passed.tbd'">
   <tr style="width: 3.2em; color: 000000; background-color: #B8FFB8; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
     <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -231,7 +231,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right">Success</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='fail.tbd'">
+  <xsl:when test="@classname='failures.tbd'">
   <tr style="width: 3.2em; color: #ffffff; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
   <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
@@ -242,10 +242,10 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   <td align="right"><xsl:value-of select="@tv"/></td>&nbsp;
   <td align="right"><xsl:value-of select="@classname"/></td>&nbsp;
   <td align="right"><xsl:value-of select="@time"/></td>&nbsp;
-  <td align="right">Fail</td>&nbsp;
+  <td align="right">failures</td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='fail.unchanged'">
+  <xsl:when test="@classname='failures.unchanged'">
   <xsl:variable name="color" select="ffffff" />
   <tr color="$color" style="width: 3.2em; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
@@ -261,7 +261,7 @@ Coverage     :<xsl:value-of select="testsuites/@cover"/>
   </td>&nbsp;
   </tr>&nbsp;
   </xsl:when>
-  <xsl:when test="@classname='fail.broken'">
+  <xsl:when test="@classname='failures.broken'">
   <tr style="font-weight: bold; width: 3.2em; color: #ffffff; background-color: #FF0033; border-width:1px; border-style:solid; border-color:black">&nbsp;
   <td align="left">
   <a href="{concat(@log,'.html')}"><xsl:value-of select="@target"/></a>&nbsp;
