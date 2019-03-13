@@ -5,16 +5,20 @@ import sys, glob, re, os, argparse, datetime, xml.etree.ElementTree
 import sqlalchemy, pymysql
 
 parser = argparse.ArgumentParser(description='Uploads xml to sql database')
-parser.add_argument('-db', action="store", dest="db")
+parser.add_argument('-mysqlserver', action="store", dest="mysqlserver")
+parser.add_argument('-mysqlport', action="store", dest="mysqlport")
+parser.add_argument('-mysqluser', action="store", dest="mysqluser")
+parser.add_argument('-mysqlpwd', action="store", dest="mysqlpwd")
+parser.add_argument('-mysqldb', action="store", dest="mysqldb")
 parser.add_argument('-p', '--purge', help="purge database")
 args = parser.parse_args()
 
 root = xml.etree.ElementTree.parse('example/report/report.xml').getroot()
 
 metadata = sqlalchemy.MetaData()
-engine = sqlalchemy.create_engine('mysql://mysql:mysql@localhost:3306') # connect to server
-engine.execute("CREATE DATABASE IF NOT EXISTS "+ args.db)
-engine.execute("USE " + args.db)
+engine = sqlalchemy.create_engine('mysql://' + args.mysqluser + ':' + args.mysqlpwd + '@' + args.mysqlserver + ':' + args.mysqlport)
+engine.execute("CREATE DATABASE IF NOT EXISTS "+ args.mysqldb)
+engine.execute("USE " + args.mysqldb)
 if args.purge:
   engine.execute("DROP TABLE IF EXISTS testsuites")
 engine.execute("CREATE TABLE IF NOT EXISTS testsuites (\

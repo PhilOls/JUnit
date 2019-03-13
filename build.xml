@@ -92,7 +92,11 @@
 			executable="python"
 			failonerror="true">
 			<arg value="./xml2sql.py" />
-			<arg line="-db testsuites" />
+			<arg line="-mysqlserver ${mysql.server}" />
+			<arg line="-mysqlport ${mysql.port}" />
+			<arg line="-mysqluser ${mysql.user}" />
+			<arg line="-mysqlpwd ${mysql.pwd}" />
+			<arg line="-mysqldb ${mysql.db}" />
 		</exec>
 	</target>
 
