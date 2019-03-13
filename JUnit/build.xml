@@ -1,22 +1,99 @@
-<project name="JUnit" default="default" basedir=".">
+<project
+	name="JUnit"
+	default="default"
+	basedir=".">
 	<description>
 		JUnit test report creation
 	</description>
-	
+
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
-			<pathelement location="./ant-contrib-0.6.jar"/>
+			<pathelement location="./ant-contrib-0.6.jar" />
 		</classpath>
 	</taskdef>
-	
-	<import file="triage.xml"/>
 
-	<property environment="env"/>
-	<property file="build.properties"/>	
-              	
+	<property environment="env" />
+	<property file="build.properties" />
+	<property
+		name="purge"
+		value="off" />
+
 	<target name="default">
-		<sequential>
-			<triage/>
-		</sequential>
+	
+		<tstamp>
+			<format
+				property="datetimeref"
+				pattern="yyyyMMdd_HHmmss" />
+			<format
+				property="dateref"
+				pattern="yyyyMMdd" />
+		</tstamp>
+
+		<echo message="Starting python for csv to xml now..." />
+		<exec
+			executable="hostname"
+			outputproperty="hostname" />
+		<mkdir dir="${report.dir}" />
+		<exec
+			executable="python"
+			failonerror="true">
+			<arg value="./csv2xml.py" />
+			<arg line="-dir ${report.dir}" />
+			<arg line="-size ${size}" />
+			<arg line="-machine ${hostname}" />
+			<arg line="-build ${env.BUILD_NUMBER}" />
+			<arg line="-version ${env.SVN_REVISION}" />
+			<arg line="-cover ${cover}" />
+			<arg line="-corners ${corners}" />
+			<arg line="-testbenches ${testbenches}" />
+			<arg line="-urlroot ${jenkins.url.root}" />
+		</exec>
+		<echo
+			message="Test report xml generation complete. Starting xsltproc for html now..." />
+		<exec
+			executable="msxsl"
+			failonerror="true">
+			<arg value="${report.dir}/report/report.xml" />
+			<arg value="./report.xsl" />
+			<arg line=" -o ${report.dir}/report/report.html" />
+		</exec>
+		<echo message="Test report html generation complete. " />
+		<copy todir="${report.dir}/js">
+			<fileset dir="./js" />
+		</copy>
+		<copy todir="${report.dir}/css">
+			<fileset dir="./css" />
+		</copy>
+		<if>
+			<equals
+				arg1="${archive}"
+				arg2="off" />
+			<then>
+				<echo message="Archive off" />
+			</then>
+			<else>
+				<if>
+					<isset property="env.BUILD_NUMBER" />
+					<then>
+						<copy todir="${report.dir}/report_${env.BUILD_NUMBER}">
+							<fileset dir="report" />
+						</copy>
+					</then>
+					<else>
+						<copy todir="${report.dir}/report_${datetimeref}">
+							<fileset dir="${report.dir}/report" />
+						</copy>
+					</else>
+				</if>
+			</else>
+		</if>
+		<echo message="Starting python for xml to sql..." />
+		<exec
+			executable="python"
+			failonerror="true">
+			<arg value="./xml2sql.py" />
+			<arg line="-db testsuites" />
+		</exec>
 	</target>
+
 </project>

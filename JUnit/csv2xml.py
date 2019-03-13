@@ -1,5 +1,5 @@
+#Standard packages
 import sys, glob, re, os, argparse, csv
-from http.client import _CS_REQ_STARTED
 
 parser = argparse.ArgumentParser(description='Converts csv to JUnit XML file')
 
@@ -18,7 +18,7 @@ args.corners = args.corners.split(",")
 args.testbenches = args.testbenches.split(",")
 
 
-status_l =["started", "fail", "pass", "timeout", "disabled", "duplicate"]
+status_l =["started", "failures", "passed", "timeout", "disabled", "duplicate"]
 
 path = os.getcwd()
 path = path.rsplit('/')
@@ -56,8 +56,8 @@ class TestCase:
             ' time="'       + self.time        + '"' +
             ' log="'        + self.log         + '"' +
             '>\n')
-    if self.status=="fail":
-      xml += indent + '  <failure message="Failed with fail status"/>\n'
+    if self.status=="failures":
+      xml += indent + '  <failure message="Failed with failures status"/>\n'
       xml += indent + '  <system-out>\n'
       #TBD
       xml += indent +'  </system-out>\n'
@@ -88,14 +88,14 @@ class TestSuite:
   def xml_out(self):
     indent = "  "
     xml = indent  + '<testsuite  name="' + self.testbench + '@' + self.corner +'"' 
-    xml += ' tests="'      + str(len([i for i in self.tc_l if i.status in ["started","pass","fail","timeout"]]))                + '"'
-    xml += ' pass="'       + str(len([i for i in self.tc_l if i.status == "pass"]))                                             + '"'
+    xml += ' tests="'      + str(len([i for i in self.tc_l if i.status in ["started","passed","failures","timeout"]]))                + '"'
+    xml += ' passed="'       + str(len([i for i in self.tc_l if i.status == "passed"]))                                             + '"'
     xml += ' disabled="'   + str(len([i for i in self.tc_l if i.status == "disabled"]))                                         + '"'
     xml += ' duplicate="'  + str(len([i for i in self.tc_l if i.status == "duplicate"]))                                        + '"'
     xml += ' unknowns="'   + str(len([i for i in self.tc_l if i.status == "started"]))                                          + '"'
     xml += ' fixed="'      + str(len([i for i in self.tc_l if i.regress == "fixed"]))                                           + '"'
     xml += ' broken="'     + str(len([i for i in self.tc_l if i.regress == "broken"]))                                          + '"'
-    xml += ' failures="'   + str(len([i for i in self.tc_l if i.status in ["started","fail","timeout"]]))                       + '"'
+    xml += ' failures="'   + str(len([i for i in self.tc_l if i.status in ["started","failures","timeout"]]))                       + '"'
     xml += '>\n'
     for tc in self.tc_l:
       xml+= tc.xml_out()
@@ -128,16 +128,16 @@ class TestSuites:
     broken = 0
     unknowns = 0
     for ts in self.ts_l:
-      tests      += len([i for i in ts.tc_l if i.status  in ["pass","fail","started","timeout"]])
-      passed     += len([i for i in ts.tc_l if i.status  in ["pass"]])
-      fails      += len([i for i in ts.tc_l if i.status  in ["fail","timeout"]])
+      tests      += len([i for i in ts.tc_l if i.status  in ["passed","failures","started","timeout"]])
+      passed     += len([i for i in ts.tc_l if i.status  in ["passed"]])
+      fails      += len([i for i in ts.tc_l if i.status  in ["failures","timeout"]])
       unknowns   += len([i for i in ts.tc_l if i.status  in ["started"]])
       disabled   += len([i for i in ts.tc_l if i.status  in ["disabled"]])
       duplicates += len([i for i in ts.tc_l if i.status  in ["duplicates"]])
       fixed      += len([i for i in ts.tc_l if i.regress in ["fixed"]])
       broken     += len([i for i in ts.tc_l if i.regress in ["broken"]])
     xml += ' tests="'     + str(tests)      +'"'
-    xml += ' pass="'      + str(passed)     +'"'
+    xml += ' passed="'      + str(passed)     +'"'
     xml += ' failures="'  + str(fails)      +'"'
     xml += ' disabled="'  + str(disabled)   +'"'
     xml += ' duplicate="' + str(duplicates) +'"'
@@ -186,9 +186,9 @@ for prev_ts in prev_tss.ts_l:
       for tc in [i for i in ts.tc_l if i.test == prev_tc.test and i.seed == prev_tc.seed]:
         if (tc.status == prev_tc.status):
           tc.regress = "unchanged"
-        elif tc.status == "pass" and prev_tc.status in ["fail", "timeout"] :
+        elif tc.status == "passed" and prev_tc.status in ["failures", "timeout"] :
           tc.regress = "fixed"
-        elif tc.status in ["fail","timeout"] and prev_tc.status == "pass" :
+        elif tc.status in ["failures","timeout"] and prev_tc.status == "passed" :
           tc.regress = "broken"
 
 with open(args.dir + "/report/report.xml", "w") as fo: 
