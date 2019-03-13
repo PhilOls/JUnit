@@ -1,0 +1,86 @@
+<project name="triage">
+	<description>
+	Ant triage targets to generate test reports and report build status
+	</description>
+	<property environment="env"/>
+
+    <available file="python" filepath="${env.PATH}"  property="python.present"/>
+    <available file="xsltproc" filepath="${env.PATH}"  property="xsltproc.present"/>
+
+	<condition property="isMac">
+  		<os family="mac" />
+	</condition>
+
+	<condition property="isWindows">
+  		<os family="windows" />
+	</condition>
+
+	<condition property="isUnix">
+  		<os family="unix" />
+	</condition>
+
+	<macrodef name="triage">
+		<sequential>
+			<tstamp>
+				<format property="datetimeref" pattern="yyyyMMdd_HHmmss"/>
+				<format property="dateref" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo message="Starting python for csv to xml now..."/>
+			<exec executable="hostname" outputproperty="hostname"/>
+			<mkdir dir="${report.dir}"/>
+			<exec executable="python" failonerror="true">
+				<arg value="./csv2xml.py"/>
+				<arg line="-dir ${report.dir}"/>
+				<arg line="-size ${size}"/>
+				<arg line="-machine ${hostname}"/>
+				<arg line="-build ${env.BUILD_NUMBER}"/>
+				<arg line="-version ${env.SVN_REVISION}"/>
+				<arg line="-cover ${cover}"/>
+				<arg line="-corners ${corners}"/>
+				<arg line="-testbenches ${testbenches}"/>
+				<arg line="-urlroot ${jenkins.url.root}"/>
+			</exec>
+			<echo message="Test report xml generation complete. Starting xsltproc for html now..."/>
+			<exec executable="msxsl" failonerror="true">
+				<arg value="${report.dir}/report/report.xml"/>
+				<arg value="./report.xsl"/>
+				<arg line=" -o ${report.dir}/report/report.html"/>
+			</exec>
+			<echo message="Test report html generation complete. "/>
+			<copy todir="${report.dir}/js"><fileset dir="./js"/></copy>
+			<copy todir="${report.dir}/css"><fileset dir="./css"/></copy>
+			<if>
+				<equals arg1="${archive}" arg2="off"/>
+				<then>
+					<echo message="Archive off"/>
+				</then>
+				<else>
+					<if>
+						<isset property="env.BUILD_NUMBER"/>
+						<then>
+							<copy todir="${report.dir}/report_${env.BUILD_NUMBER}">
+								<fileset dir="report"/>
+							</copy>
+						</then>
+						<else>
+							<copy todir="${report.dir}/report_${datetimeref}">
+								<fileset dir="${report.dir}/report"/>
+							</copy>
+						</else>
+					</if>
+				</else>
+			</if>
+			<echo message="Starting python for xml to sql now..."/>
+			<exec executable="python" failonerror="true">
+				<arg value="./xml2sql.py"/>
+				<arg line="-db testsuites"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<target name="triage">
+		<triage/>
+	</target>
+	
+</project>
+  
