@@ -1,11 +1,13 @@
 # JUnit
 
 Creation of a custom test report in JUnit xml format from csv delimited files.
+Upload of test results to an sql database.
+A Grafana dashboard is available as well.
 
 Direct access to test log is provided by clicking on the testname.
 
 For an example of generated report:
-http://htmlpreview.github.io/?https://github.com/PhilOls/JUnit/blob/master/JUnit/example/report/report.html
+http://htmlpreview.github.io/?https://github.com/PhilOls/JUnit/blob/master/example/report/report.html
 
 JUnit can be used with continuous integration tools like Jenkins, Bamboo and point to stored artifacts for each build
 
