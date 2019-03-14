@@ -4,6 +4,8 @@ Creation of a custom test report in JUnit xml format from csv delimited files.
 Upload of test results to an sql database.
 A Grafana dashboard generation is available as well.
 
+![alt text](https://raw.githubusercontent.com/PhilOls/JUnit/master/grafana/dashboard.png)
+
 Direct access to test log is provided by clicking on the testname.
 
 For an example of generated report:
