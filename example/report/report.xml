@@ -1,4 +1,4 @@
-<testsuites name="testsuites" size="${size}" machine="DESKTOP-6CSCC59" build="${env.BUILD_NUMBER}" cover="${cover}" urlroot="./.." version="${env.SVN_REVISION}" tests="6" passed="2" failures="3" disabled="1" duplicate="0" unknowns="1" fixed="0" broken="0">
+<testsuites name="testsuites" tests="6" passed="2" failures="3" disabled="1" duplicate="0" unknowns="1" fixed="0" broken="0">
   <testsuite  name="top@rtl" tests="6" passed="2" disabled="1" duplicate="1" unknowns="1" fixed="0" broken="0" failures="4">
     <testcase name="intent.teststarted_0" classname="started.unchanged" corner="rtl" target="intent.teststarted" seed="0" basename="top" time="20171231_213100" log="logpath">
     </testcase>

@@ -6,12 +6,6 @@
 		JUnit test report creation
 	</description>
 
-	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
-		<classpath>
-			<pathelement location="./ant-contrib-0.6.jar" />
-		</classpath>
-	</taskdef>
-
 	<property environment="env" />
 	<property file="build.properties" />
 	<property
@@ -39,14 +33,6 @@
 			failonerror="true">
 			<arg value="./csv2xml.py" />
 			<arg line="-dir ${report.dir}" />
-			<arg line="-size ${size}" />
-			<arg line="-machine ${hostname}" />
-			<arg line="-build ${env.BUILD_NUMBER}" />
-			<arg line="-version ${env.SVN_REVISION}" />
-			<arg line="-cover ${cover}" />
-			<arg line="-corners ${corners}" />
-			<arg line="-testbenches ${testbenches}" />
-			<arg line="-urlroot ${jenkins.url.root}" />
 		</exec>
 		<echo
 			message="Test report xml generation complete. Starting xsltproc for html now..." />
@@ -64,39 +50,28 @@
 		<copy todir="${report.dir}/css">
 			<fileset dir="./css" />
 		</copy>
-		<if>
-			<equals
-				arg1="${archive}"
-				arg2="off" />
-			<then>
-				<echo message="Archive off" />
-			</then>
-			<else>
-				<if>
-					<isset property="env.BUILD_NUMBER" />
-					<then>
-						<copy todir="${report.dir}/report_${env.BUILD_NUMBER}">
-							<fileset dir="report" />
-						</copy>
-					</then>
-					<else>
-						<copy todir="${report.dir}/report_${datetimeref}">
-							<fileset dir="${report.dir}/report" />
-						</copy>
-					</else>
-				</if>
-			</else>
-		</if>
+		<copy todir="${report.dir}/report_${datetimeref}">
+			<fileset dir="${report.dir}/report" />
+		</copy>
 		<echo message="Starting python for xml to sql..." />
 		<exec
 			executable="python"
 			failonerror="true">
 			<arg value="./xml2sql.py" />
-			<arg line="-mysqlserver ${mysql.server}" />
-			<arg line="-mysqlport ${mysql.port}" />
-			<arg line="-mysqluser ${mysql.user}" />
-			<arg line="-mysqlpwd ${mysql.pwd}" />
-			<arg line="-mysqldb ${mysql.db}" />
+			<arg line="-mysql.server ${mysql.server}" />
+			<arg line="-mysql.port ${mysql.port}" />
+			<arg line="-mysql.user ${mysql.user}" />
+			<arg line="-mysql.pwd ${mysql.pwd}" />
+			<arg line="-mysql.db ${mysql.db}" />
+		</exec>
+		<echo message="Starting grafana dashboard creation..." />
+		<exec
+			executable="python"
+			failonerror="true">
+			<arg value="./grafana.py" />
+			<arg line="-grafana.authentication ${grafana.authentication}" />
+			<arg line="-grafana.server ${grafana.server}" />
+			<arg line="-grafana.port ${grafana.port}" />
 		</exec>
 	</target>
 

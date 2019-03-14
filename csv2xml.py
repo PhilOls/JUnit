@@ -2,30 +2,10 @@
 import sys, glob, re, os, argparse, csv
 
 parser = argparse.ArgumentParser(description='Converts csv to JUnit XML file')
-
 parser.add_argument('-dir', action="store", dest="dir")
-parser.add_argument('-size', action="store", dest="size")
-parser.add_argument('-machine', action="store", dest="machine")
-parser.add_argument('-build', action="store", dest="build")
-parser.add_argument('-cover', action="store", dest="cover")
-parser.add_argument('-version', action="store", dest="version")
-parser.add_argument('-corners', action="store", dest="corners")
-parser.add_argument('-testbenches', action="store", dest="testbenches")
-parser.add_argument('-urlroot', action="store", dest="urlroot")
-
 args = parser.parse_args()
-args.corners = args.corners.split(",")
-args.testbenches = args.testbenches.split(",")
-
 
 status_l =["started", "failures", "passed", "timeout", "disabled", "duplicate"]
-
-path = os.getcwd()
-path = path.rsplit('/')
-path.reverse()
-print("path=")
-print(path)
-# job=path[2]
 
 class TestCase:
   '''Doc - object storing all required data for a single testcase'''
@@ -112,13 +92,6 @@ class TestSuites:
   def xml_out(self):
     indent = ""
     xml = indent + '<testsuites name="testsuites"'
-    xml += ' size="' + args.size +'"'
-    xml += ' machine="' + args.machine +'"'
-  #  +'" job="'+job
-    xml += ' build="' + args.build +'"'
-    xml += ' cover="' + args.cover +'"'
-    xml += ' urlroot="' + args.urlroot +'"'
-    xml += ' version="' + args.version +'"'
     tests = 0
     passed = 0
     fails = 0
@@ -137,7 +110,7 @@ class TestSuites:
       fixed      += len([i for i in ts.tc_l if i.regress in ["fixed"]])
       broken     += len([i for i in ts.tc_l if i.regress in ["broken"]])
     xml += ' tests="'     + str(tests)      +'"'
-    xml += ' passed="'      + str(passed)     +'"'
+    xml += ' passed="'    + str(passed)     +'"'
     xml += ' failures="'  + str(fails)      +'"'
     xml += ' disabled="'  + str(disabled)   +'"'
     xml += ' duplicate="' + str(duplicates) +'"'
@@ -164,8 +137,6 @@ def parseFile(file, status, tss):
             i.add(TestCase(status, line))
         else:
           print("Formating error, file: " + fn)
-
-print("Lookup ref report:" + args.dir + '/report_*')
 
 prev_tss = TestSuites()
 
