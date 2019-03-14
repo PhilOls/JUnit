@@ -2,9 +2,7 @@
 
 Creation of a custom test report in JUnit xml format from csv delimited files.
 Upload of test results to an sql database.
-A Grafana dashboard is available as well.
-For an example of generated grafana dashboard:
-https://snapshot.raintank.io/dashboard/snapshot/bvwmuYdb0niiQ2p61J6wqvfEzkzJ4sR1
+A Grafana dashboard generation is available as well.
 
 Direct access to test log is provided by clicking on the testname.
 
