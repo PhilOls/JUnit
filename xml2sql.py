@@ -19,35 +19,57 @@ metadata = sqlalchemy.MetaData()
 engine = sqlalchemy.create_engine('mysql://' + args.user + ':' + args.pwd + '@' + args.server + ':' + args.port)
 engine.execute("CREATE DATABASE IF NOT EXISTS "+ args.db)
 engine.execute("USE " + args.db)
-if args.purge:
-  engine.execute("DROP TABLE IF EXISTS testsuites")
-engine.execute("CREATE TABLE IF NOT EXISTS testsuites (\
-  timestamp TIMESTAMP, \
-  tests INT, \
-  passed INT, \
-  failures INT, \
-  disabled INT, \
-  duplicate INT, \
-  unknowns INT, \
-  fixed INT, \
-  broken INT, \
-  passrate FLOAT(5,2)) ")
-table = sqlalchemy.Table('testsuites', metadata, autoload=True, autoload_with=engine)
-for child in root:
-  try:
-    passrate = 100*int(child.attrib['passed'])/int(child.attrib['tests'])
-  except ZeroDivisionError:
-    passrate = 0
-  q = table.insert().values(
-    timestamp=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-    tests=child.attrib['tests'],
-    passed=child.attrib['passed'],
-    failures=child.attrib['failures'],
-    disabled=child.attrib['disabled'],
-    duplicate=child.attrib['duplicate'],
-    unknowns=child.attrib['unknowns'],
-    fixed=child.attrib['fixed'],
-    broken=child.attrib['broken'],
-    passrate=passrate)
+
+def testsuites():
+  if args.purge:
+    engine.execute("DROP TABLE IF EXISTS testsuites")
+  engine.execute("CREATE TABLE IF NOT EXISTS testsuites (\
+    timestamp TIMESTAMP, \
+    tests INT, \
+    passed INT, \
+    failures INT, \
+    disabled INT, \
+    duplicate INT, \
+    unknowns INT, \
+    fixed INT, \
+    broken INT, \
+    passrate FLOAT(5,2)) ")
+  table = sqlalchemy.Table('testsuites', metadata, autoload=True, autoload_with=engine)
+  for child in root:
+    try:
+      passrate = 100*int(child.attrib['passed'])/int(child.attrib['tests'])
+    except ZeroDivisionError:
+      passrate = 0
+    q = table.insert().values(
+      timestamp=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+      tests=child.attrib['tests'],
+      passed=child.attrib['passed'],
+      failures=child.attrib['failures'],
+      disabled=child.attrib['disabled'],
+      duplicate=child.attrib['duplicate'],
+      unknowns=child.attrib['unknowns'],
+      fixed=child.attrib['fixed'],
+      broken=child.attrib['broken'],
+      passrate=passrate)
+    connection = engine.connect()
+    connection.execute(q)
+
+def testcases():
+  if args.purge:
+    engine.execute("DROP TABLE IF EXISTS testcases")
+  engine.execute("CREATE TABLE IF NOT EXISTS testcases (\
+      timestamp TIMESTAMP, \
+      name VARCHAR(100), \
+      classname VARCHAR(100)) ")
+  table = sqlalchemy.Table('testcases', metadata, autoload=True, autoload_with=engine)
   connection = engine.connect()
-  connection.execute(q)
+  for child in root.findall("./testsuite/testcase"):
+    q = table.insert().values(
+    timestamp=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+    name=child.attrib['name'],
+    classname=child.attrib['classname'])
+    connection.execute(q)
+
+testsuites()
+testcases()
+
