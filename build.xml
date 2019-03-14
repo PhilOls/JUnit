@@ -69,9 +69,10 @@
 			executable="python"
 			failonerror="true">
 			<arg value="./grafana.py" />
-			<arg line="-grafana.authentication ${grafana.authentication}" />
 			<arg line="-grafana.server ${grafana.server}" />
 			<arg line="-grafana.port ${grafana.port}" />
+			<arg line="-grafana.user ${grafana.user}" />
+			<arg line="-grafana.pwd ${grafana.pwd}" />
 		</exec>
 	</target>
 
