@@ -4,6 +4,8 @@ Creation of a custom test report in JUnit xml format from csv delimited files.
 Upload of test results to an sql database.
 A Grafana dashboard generation is available as well.
 
+![alt text](https://raw.githubusercontent.com/PhilOls/JUnit/master/grafana/dashboard.png)
+
 Direct access to test log is provided by clicking on the testname.
 
 For an example of generated report:
@@ -35,32 +37,17 @@ where:
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+#### Python packages 
+| Package | Pip install name |
+| --- | --- |
+| cryptography  | cryptography
+| base64        | pybase64
+| PyMySQL       | PyMySQL
+| SQLAlchemy    | SQLAlchemy
+| requests      | requests
 
-```
-Give examples
-```
 #### Windows
 * [MSXSL] (https://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=21714) - MSXSL
-
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
